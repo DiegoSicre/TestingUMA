@@ -83,7 +83,7 @@ public class ClubDeportivo {
 			grupos[ngrupos] = g;
 			ngrupos++;
 		} else { // El grupo ya existe, se actualizan las plazas
-			grupos[pos].actualizarPlazas(g.getPlazas());
+			grupos[pos].actualizarPlazas(g.getPlazas()); //Cómo está 
 		}
 	}
 	/* 

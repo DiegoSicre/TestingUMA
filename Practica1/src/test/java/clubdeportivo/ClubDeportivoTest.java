@@ -14,7 +14,8 @@ public class ClubDeportivoTest {
     Grupo grupo1, grupo2, grupo3;
  @BeforeEach
     void setup() throws ClubException {
-        testClubSmall = new ClubDeportivo("Club Deportivo Ejemplo", 2);
+        //Arrange
+        
         testClub = new ClubDeportivo("Club Deportivo Ejemplo", 5);
         grupo1 = new Grupo("Grupo A", "Fútbol", 20, 10, 50.0); // 10 plazas libres
         grupo2 = new Grupo("Grupo B", "Baloncesto", 15, 5, 30.0); // 10 plazas libres
@@ -43,6 +44,7 @@ public class ClubDeportivoTest {
     @Test
     @DisplayName("TestNumeroGruposInvalido: No permite número de grupos 0 o negativo")
     void clubDeportivo_invalidGroupNumber_throwsException() {
+        //Act, Assert
         assertThrows(ClubException.class, () -> new ClubDeportivo("Club Test", 0));
         assertThrows(ClubException.class, () -> new ClubDeportivo("Club Test", -3));
     }
@@ -51,12 +53,14 @@ public class ClubDeportivoTest {
     @Test
     @DisplayName("TestConstructorDefault: Usa el tamaño por defecto si no se indica")
     void clubDeportivo_defaultConstructor_usesDefaultSize() {
+        //Act, Assert
         assertDoesNotThrow(() -> new ClubDeportivo("Club Default"));
     }
     
     @Test
     @DisplayName("TestAnyadirActividadCorrecta: Añade un grupo sin errores")
     void anyadirActividad_validGroup_addsSuccessfully() throws ClubException {
+        //Act, Assert
         assertDoesNotThrow(() -> testClub.anyadirActividad(grupo1));
     }
 
@@ -64,6 +68,7 @@ public class ClubDeportivoTest {
     @Test
     @DisplayName("TestAnyadirActividadNulo: Lanza excepción si el grupo es nulo")
     void anyadirActividad_nullGroup_throwsException() {
+        //Act, assert
         assertThrows(ClubException.class, () -> testClub.anyadirActividad((Grupo) null));
     }
 
@@ -71,6 +76,7 @@ public class ClubDeportivoTest {
     @DisplayName("TestAnyadirActividadDuplicada: No permite duplicados, actualiza plazas")
     void anyadirActividad_duplicateGroup_updatesPlazas() throws ClubException {
         testClub.anyadirActividad(grupo1);
+        //Act, assert
         Grupo updatedGrupo = new Grupo("Grupo A", "Actividad 1", 30, 15, 50.0);
         assertDoesNotThrow(() -> testClub.anyadirActividad(updatedGrupo));
     }
@@ -79,9 +85,12 @@ public class ClubDeportivoTest {
     @Test
     @DisplayName("TestAnyadirActividadClubLleno: No permite añadir más grupos de la capacidad máxima")
     void anyadirActividad_clubFull_throwsException() throws ClubException {
+        //Arrange
+        testClubSmall = new ClubDeportivo("Club Deportivo Ejemplo", 2);
         testClubSmall.anyadirActividad(grupo1);
         testClubSmall.anyadirActividad(grupo2);
         Grupo extraGrupo = new Grupo("Grupo C", "Actividad 3", 10, 5, 40.0);
+        //Act, assert
         assertThrows(ClubException.class, () -> testClubSmall.anyadirActividad(extraGrupo));
     }
 

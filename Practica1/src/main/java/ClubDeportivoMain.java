@@ -7,7 +7,7 @@ public class ClubDeportivoMain {
 		String [] grupo1 = {"123A","Kizomba","10","10","25.0"};
 		
 		try {
-			ClubDeportivo club = new ClubDeportivo("UMA",1);
+			ClubDeportivo club = new ClubDeportivo("UMA",2);
 			Grupo pilates = new Grupo("456B","Pilates",8,5,50.0);
 			club.anyadirActividad(grupo1);
 			club.anyadirActividad(pilates);
