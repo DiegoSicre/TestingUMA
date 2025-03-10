@@ -102,4 +102,56 @@ public class ClubDeportivoTest {
         int plazasEsperadas = g.plazasLibres();
         assertEquals(plazasEsperadas,club.plazasLibres(actividad));
     }
+
+    @Test
+    @DisplayName("Matricular devuelve error, mas personas que plazas libres")
+    public void matricularErrorMasPersonasQuePlazasLibres() throws ClubException {
+        String actividad = "lengua";
+        int alumnosAMatricular = 5;
+        Grupo g = new Grupo("001","lengua",4,2,3);
+        club.anyadirActividad(g);
+        assertThrows(ClubException.class,()->{club.matricular(actividad,alumnosAMatricular);});
+    }
+
+    @Test
+    @DisplayName("Matricular no cambia datos y lanza excepcion, actividad no existente")
+    public void matricularNoCambiaDatosActividadNoExistente() throws ClubException {
+        String actividad = "lengua";
+        int alumnosAMatricular = 5;
+        Grupo g = new Grupo("001","Mates",4,2,3);
+        club.anyadirActividad(g);
+        assertThrows(ClubException.class,()->{club.matricular(actividad,5);});
+    }
+
+    @Test
+    @DisplayName("Matricular funciona correctamente")
+    public void matricularFuncionaCorrectamente() throws ClubException {
+        String actividad = "lengua";
+        int alumnosAMatricular = 1;
+        Grupo g = new Grupo("001","lengua",4,2,3);
+        int resultadoEsperado = g.getMatriculados() + alumnosAMatricular;
+
+        club.anyadirActividad(g);
+        club.matricular(actividad,alumnosAMatricular);
+
+        assertEquals(resultadoEsperado,g.getMatriculados());
+    }
+
+    @Test
+    @DisplayName("Ingresos funciona correctamente")
+    public void ingresosFuncionaCorrectamente() throws ClubException {
+        Grupo g = new Grupo("001","lengua",4,2,3);
+        double resultadoEsperado = g.getTarifa()*g.getMatriculados();
+        club.anyadirActividad(g);
+        assertEquals(resultadoEsperado,club.ingresos());
+    }
+
+    @Test
+    @DisplayName("To string funciona correctamente")
+    public void toStringFuncionaCorrectamente() throws ClubException {
+        Grupo g = new Grupo("001","lengua",4,2,3);
+        String resultadoEsperado = "Club --> [ " + g.toString() + " ]";
+        club.anyadirActividad(g);
+        assertEquals(resultadoEsperado,club.toString());
+    }
 }
