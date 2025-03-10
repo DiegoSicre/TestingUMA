@@ -61,15 +61,13 @@ public class ClubDeportivo {
 	}*/
 	public void anyadirActividad(String[] datos) throws ClubException {
 		validarDatosActividad(datos);
-		try {
+		
 			int plazas = Integer.parseInt(datos[2]);
 			int matriculados = Integer.parseInt(datos[3]);
 			double tarifa = Double.parseDouble(datos[4]);
 			Grupo g = new Grupo(datos[0], datos[1], plazas, matriculados, tarifa);
 			anyadirActividad(g);
-		} catch (NumberFormatException e) {
-			throw new ClubException("ERROR: formato de número incorrecto");
-		}
+
 	}
 	public void anyadirActividad(Grupo g) throws ClubException {
 		validarGrupoNoNulo(g);
@@ -83,7 +81,7 @@ public class ClubDeportivo {
 			grupos[ngrupos] = g;
 			ngrupos++;
 		} else { // El grupo ya existe, se actualizan las plazas
-			grupos[pos].actualizarPlazas(g.getPlazas()); //Cómo está 
+			grupos[pos].actualizarPlazas(g.getPlazas()); //Aquí, tal vez deberieramos de actualizar los demás datos en caso de coincidencia, pero no quiero alterar la lógica de negocio
 		}
 	}
 	/* 
@@ -105,11 +103,26 @@ public class ClubDeportivo {
 		}
 	}
 	
-	private void validarDatosActividad(String[] datos) throws ClubException {
-		if (datos == null || datos.length < 5) {
-			throw new ClubException("ERROR: los datos de la actividad son inválidos o incompletos.");
-		}
-	}
+    private void validarDatosActividad(String[] datos) throws ClubException {
+        if (datos == null || datos.length < 5) {
+            throw new ClubException("ERROR: Los datos de la actividad son inválidos o incompletos.");
+        }
+        for (int i = 0; i < datos.length; i++) {
+            if (datos[i] == null || datos[i].trim().isEmpty()) {
+                throw new ClubException("ERROR: Los datos de la actividad no pueden contener valores nulos o vacíos.");
+            }
+        }
+        try {
+            int plazas = Integer.parseInt(datos[2]);
+            int matriculados = Integer.parseInt(datos[3]);
+            double tarifa = Double.parseDouble(datos[4]);
+            if (plazas <= 0 || matriculados < 0 || tarifa < 0) {
+                throw new ClubException("ERROR: Plazas, matriculados o tarifa deben ser valores positivos.");
+            }
+        } catch (NumberFormatException e) {
+            throw new ClubException("ERROR: Formato de número incorrecto en los datos de la actividad.");
+        }
+    }
 	/* 
 	public int plazasLibres(String actividad) {
 		int p = 0;
@@ -128,7 +141,7 @@ public class ClubDeportivo {
 		int p = 0;
 		int i = 0;
 		while (i < ngrupos) {
-			if (grupos[i] != null && grupos[i].getActividad().equals(actividad)) {
+			if (grupos[i].getActividad().equals(actividad)) {
 				p += grupos[i].plazasLibres();
 			}
 			i++;
@@ -142,7 +155,8 @@ public class ClubDeportivo {
 			throw new ClubException("ERROR: La actividad no puede ser nula o vacía.");
 		}
 	}
-
+	//Voy por aquí
+	/* 
 	public void matricular(String actividad, int npersonas) throws ClubException {
 		int plazas = plazasLibres(actividad);
 		if (plazas < npersonas) {
@@ -161,8 +175,38 @@ public class ClubDeportivo {
 			}
 			i++;
 		}
+	}*/
+	public void matricular(String actividad, int npersonas) throws ClubException {
+		validarActividad(actividad); // Validación de actividad
+		validarNumeroPersonas(npersonas); // Validación del número de personas
+	
+		int plazas = plazasLibres(actividad);
+		if (plazas < npersonas) {
+			throw new ClubException("ERROR: no hay suficientes plazas libres para esa actividad en el club.");
+		}
+	
+		int i = 0;
+		while (i < ngrupos && npersonas > 0) {
+			if (actividad.equals(grupos[i].getActividad())) {
+				int plazasGrupo = grupos[i].plazasLibres();
+				if (npersonas >= plazasGrupo) {
+					grupos[i].matricular(plazasGrupo);
+					npersonas -= plazasGrupo;
+				} else {
+					grupos[i].matricular(npersonas);
+					npersonas = 0; // Aseguramos que la variable se actualice correctamente
+				}
+			}
+			i++;
+		}
 	}
+	private void validarNumeroPersonas(int npersonas) throws ClubException {
+		if (npersonas <= 0) {
+			throw new ClubException("ERROR: El número de personas a matricular debe ser mayor que 0.");
+		}
 
+	}
+	
 	public double ingresos() {
 		double cantidad = 0.0;
 		int i = 0;
