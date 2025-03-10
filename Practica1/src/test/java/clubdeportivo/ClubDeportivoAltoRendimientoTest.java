@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class ClubDeportivoAltoRendimientoTest {
+    
     ClubDeportivoAltoRendimiento club;
     @BeforeEach
     void setUp() throws ClubException{
@@ -32,6 +33,33 @@ public class ClubDeportivoAltoRendimientoTest {
         // Act & Assert
         assertThrows(ClubException.class, () -> new ClubDeportivoAltoRendimiento("Club Elite", 20, 0));
     }
+@Test
+@DisplayName("Ajusta correctamente el número de plazas al máximo permitido")
+void anyadirActividad_ExceedsMaxPlazas_AdjustsToMax() throws ClubException {
+    // Arrange
+    String[] datos = {"Grupo Elite", "Natación", "50", "10", "30.0"}; // 50 plazas, supera el límite de 20 en este caso.
+    
+    // Act
+    club.anyadirActividad(datos);
+    
+    // Assert
+    String result = club.toString();
+    assertTrue(result.contains("P:20"), "El número de plazas no se ajustó correctamente al máximo permitido.");
+}
+
+@Test
+@DisplayName("No modifica plazas cuando el valor está dentro del límite permitido")
+void anyadirActividad_WithinLimit_DoesNotModifyPlazas() throws ClubException {
+    // Arrange: maximoPersonasGrupo = 20, adding 15 should be fine
+    String[] datos = {"Grupo Elite", "Natación", "15", "5", "30.0"};
+
+    // Act
+    club.anyadirActividad(datos);
+
+    // Assert
+    String result = club.toString();
+    assertTrue(result.contains("P:15"), "El número de plazas debería mantenerse en 15 y no ser modificado.");
+}
 
     @Test
     @DisplayName("Lanza excepción si el incremento es negativo")
@@ -96,7 +124,7 @@ public class ClubDeportivoAltoRendimientoTest {
         // Act & Assert
         assertThrows(ClubException.class, () -> new ClubDeportivoAltoRendimiento("Club Elite", 5, 20, -5));
     }
-    /*Considero que no hay que volver a comprobar el procesamiento de datos
+   
     @Test
     @DisplayName("Lanza excepción si las plazas son mayores al máximo y contienen caracteres especiales")
     void anyadirActividad_ExceedsMaxPlazas_SpecialChars_ThrowsException() {
@@ -108,7 +136,16 @@ public class ClubDeportivoAltoRendimientoTest {
             "Debe lanzar excepción por caracteres especiales en plazas.");
     }
 
-
+    @Test
+    @DisplayName("Lanza excepción por haber menos datos de los requeridos")
+    void anyadirActividad_lessThan5CellDataArray_ThrowsException() {
+        // Arrange
+        String[] datos = {"Grupo A", "Natación", "50", "5", }; // Plazas con caracteres especiales
+        
+        // Act & Assert
+        assertThrows(ClubException.class, () -> club.anyadirActividad(datos), 
+            "Debe lanzar excepción por caracteres especiales en plazas.");
+    }
 
     @Test
     @DisplayName("Lanza excepción si la tarifa es negativa y las plazas exceden el máximo permitido")
@@ -119,7 +156,7 @@ public class ClubDeportivoAltoRendimientoTest {
         // Act & Assert
         assertThrows(ClubException.class, () -> club.anyadirActividad(datos), 
             "Debe lanzar excepción por tarifa negativa.");
-    }*/
+    }
     @Test
     @DisplayName("Establece el número de plazas al máximo permitido si se excede y lo refleja en toString()")
     void anyadirActividad_ExceedsMaxPlazas_UpdatesCorrectly() throws ClubException {

@@ -1,3 +1,4 @@
+//Práctica Realizada por Ángel Escaño y Diego Sicre
 package clubdeportivo;
 
 public class ClubException extends Exception{
