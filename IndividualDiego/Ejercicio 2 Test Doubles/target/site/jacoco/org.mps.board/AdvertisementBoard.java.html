@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdvertisementBoard.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">junit5-mps-uma</a> &gt; <a href="index.source.html" class="el_package">org.mps.board</a> &gt; <span class="el_source">AdvertisementBoard.java</span></div><h1>AdvertisementBoard.java</h1><pre class="source lang-java linenums">package org.mps.board;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Board to publish advertisements.
+ */
+public class AdvertisementBoard {
+
+    public static final String BOARD_OWNER = &quot;THE Company&quot;;
+    public static final int MAX_BOARD_SIZE = 20;
+    private final List&lt;Advertisement&gt; advertisementList;
+
+    /**
+     * Constructs a board containing an initial advertisement published by the {@code BOARD_OWNER}.
+     */
+    
+<span class="fc" id="L20">    public AdvertisementBoard() {</span>
+<span class="fc" id="L21">        advertisementList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L22">        Advertisement initialAdvertisement = new Advertisement(</span>
+<span class="fc" id="L23">                &quot;Welcome&quot;,</span>
+<span class="fc" id="L24">                &quot;This board is intended for your advertisements&quot;,</span>
+<span class="fc" id="L25">                BOARD_OWNER);</span>
+<span class="fc" id="L26">        advertisementList.add(initialAdvertisement);</span>
+<span class="fc" id="L27">    }</span>
+
+    /**
+     * Returns the number of advertisements published in this board.
+     * &lt;p&gt;
+     * The number of advertisements is bounded by {@code MAX_BOARD_SIZE}.
+     *
+     * @return the number of advertisements published in this board
+     */
+    public int numberOfPublishedAdvertisements() {
+<span class="fc" id="L37">        return advertisementList.size();</span>
+    }
+
+    /**
+     * Publishes an advertisement in this board.
+     * &lt;p&gt;
+     * For an advertisement to be published, the advertiser must be registered in the database
+     * and must have sufficient funds in the payment gateway. The advertiser called &lt;tt&gt;&quot;THE Company&quot;&lt;/tt&gt;
+     * is the owner of the advertisement board, so it can publish freely, with no constraints.
+     */
+    public void publish(Advertisement advertisement,
+                        AdvertiserDatabase advertiserDatabase,
+                        PaymentGateway paymentGateway) {
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (isBoardFull()) {</span>
+<span class="fc" id="L51">            throw new AdvertisementBoardException(&quot;The board is full. Cannot publish more advertisements.&quot;);</span>
+        }
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (isDuplicateAdvertisement(advertisement)) throw new AdvertisementBoardException(&quot;Duplicate Ads cannot be published in the board&quot;);    </span>
+
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (advertisement.advertiser.equals(BOARD_OWNER))</span>
+<span class="fc" id="L56">            advertisementList.add(advertisement);</span>
+        else {
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">            if (advertiserDatabase.advertiserIsRegistered(advertisement.advertiser) &amp;&amp;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">                    paymentGateway.advertiserHasFunds(advertisement.advertiser)) {</span>
+<span class="fc" id="L60">                advertisementList.add(advertisement);</span>
+<span class="fc" id="L61">                paymentGateway.chargeAdvertiser(advertisement.advertiser);</span>
+            }   
+        }
+<span class="fc" id="L64">    }</span>
+
+    private boolean isDuplicateAdvertisement(Advertisement ad) {
+<span class="fc" id="L67">        return advertisementList.stream()</span>
+<span class="pc bpc" id="L68" title="1 of 4 branches missed.">            .anyMatch(existing -&gt; existing.title.equals(ad.title) &amp;&amp; existing.advertiser.equals(ad.advertiser));</span>
+    }
+    private boolean isBoardFull() {
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        return this.numberOfPublishedAdvertisements() &gt;= MAX_BOARD_SIZE;</span>
+    }
+    
+    
+
+    /**
+     * Returns an {@code Optional} with an advertisement with the given title in this board,
+     * or an empty {@code Optional} if there is not such an advertisement in this board.
+     *
+     * @param title the title to search for
+     * @return an {@code Optional} with the appropriate advertisement, or and empty {@code Optional}
+     */
+    public Optional&lt;Advertisement&gt; findByTitle(String title) {
+<span class="fc" id="L84">        return advertisementList.stream().filter(ad -&gt; ad.title.equals(title)).findFirst();</span>
+    }
+
+    /**
+     * Deletes all the advertisements with both the given title and advertiser name from this board.
+     *
+     * @param title          the title of the advertisements to be deleted from this board
+     * @param advertiserName the name of the advertiser of the advertisements to be deleted from this board
+     */
+    public void deleteAdvertisement(String title, String advertiserName) {
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">        advertisementList.removeIf(ad -&gt; ad.title.equals(title) &amp;&amp; ad.advertiser.equals(advertiserName));</span>
+<span class="fc" id="L95">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

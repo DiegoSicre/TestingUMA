@@ -1,8 +1,11 @@
 package org.mps.board;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.doReturn;
@@ -17,9 +20,11 @@ public class AdvertisementBoardTest {
     //Se requiere implementar los siguientes casos de prueba en la clase de prueba AdvertisementBoardTest:
 
     //Comprobar que inicialmente hay un anuncio en el tablón.
-    //Partimos de la base de que no hace falta hacer mock para todos los test, solo para aquellos en los que se comprueben dependencias externas.
+    //Partimos de la base de que no hace falta hacer mock para todos los test,
+    // solo para aquellos en los que se comprueben dependencias externas.
 
     @Test
+    @DisplayName("Constructor: construye el objeto y añade un anuncio")
     public void AdvertisementBoard_init_hasOneAdvertisement() {
         //Arrange, Act
         AdvertisementBoard board = new AdvertisementBoard();
@@ -32,14 +37,19 @@ public class AdvertisementBoardTest {
 
     //Crear un anuncio por parte de "THE Company", insertarlo y comprobar que se ha incrementado en uno el número de anuncios del tablón.
     //En este caso la clase AdvertisementBoard tiene como dependencias externas la base de datos y la pasarela de pago,
-    //que se pasa a traves de los argumentos de la función publish, en este caso como estamos testeando con el BOARD_OWNER como advertiser no se están usando las dependencias,
+    //que se pasa a traves de los argumentos de la función publish, en este caso como estamos testeando con el BOARD_OWNER 
+    //como advertiser no se están usando las dependencias,
     //por eso tenemos que usar 
     @Test
+    @DisplayName("publishTheCompanyAd: Se añade un anuncio del dueño del board y no se comprueba si está en la base de datos ni si tiene fondos")
     public void publish_AdBoardOwner_incrementsAdsByOne() {
         //Arrange
         AdvertisementBoard board = new AdvertisementBoard();
         int numberOfAds = board.numberOfPublishedAdvertisements();
-        Advertisement advertisement = new Advertisement("Title", "Text", AdvertisementBoard.BOARD_OWNER);
+        String title = "Title";
+        String text = "Text";
+        String boardOwnerName = AdvertisementBoard.BOARD_OWNER;
+        Advertisement advertisement = new Advertisement(title, text, boardOwnerName);
         AdvertiserDatabase dummyDB = mock(AdvertiserDatabase.class);
         PaymentGateway dummyGateway = mock(PaymentGateway.class); //Ninguna de estas dos se va a usar
         //Act
@@ -53,10 +63,13 @@ public class AdvertisementBoardTest {
     
     //Publicar un anuncio por parte del anunciante "Pepe Gotera y Otilio" y comprobar que, si está en la base de datos de anunciantes pero no tiene saldo, el anuncio no se inserta, lo que se determina observando que el número de anuncios no aumenta.
    @Test
+   @DisplayName("PublishRegisteredNoFundsAdvertiser: Se intenta insertar un anunciante registrado pero sin recursos")
     public void publish_AdInDBAndNotenoughMoney_notIncremented() {
         // Arrange
         String anunciante = "Pepe Gotera y Otilio";
-        Advertisement advertisement = new Advertisement("Title", "Text", anunciante);
+        String title = "Title";
+        String text = "Text";
+        Advertisement advertisement = new Advertisement(title, text, anunciante);
         AdvertisementBoard board = new AdvertisementBoard();
         //Creación de mocks
         AdvertiserDatabase mockDb = mock(AdvertiserDatabase.class);
@@ -80,9 +93,44 @@ public class AdvertisementBoardTest {
         // También puedes verificar que NO se le haya cobrado
         verify(mockGateway, never()).chargeAdvertiser(anunciante);
     }
-
+    //Publicar un anuncio por parte de un anunciante llamado "Robin Robot", 
+    //asumiendo que está en la base de datos de anunciantes, que tiene saldo y 
+    //finalmente comprobando que se ha realizado el cargo.
+    @Test
+    @DisplayName("PublishAdvertiserWithFundsAndRegistered: inserta el anuncio y cobra al anunciante si está registrado y tiene fondos")
+    void publish_validAdvertisement_publishesAndCharges() {
+        // Arrange
+        String advertiser = "Robin Robot";
+        String title = "Robots en oferta";
+        Advertisement ad = new Advertisement(title, "Descuentos especiales", advertiser);
+    
+        AdvertisementBoard board = new AdvertisementBoard();
+    
+        // Crear mocks para las dependencias
+        AdvertiserDatabase stubDb = mock(AdvertiserDatabase.class);
+        PaymentGateway stubGateway = mock(PaymentGateway.class);
+    
+        // Stubbing: anunciante válido y con fondos
+        when(stubDb.advertiserIsRegistered(advertiser)).thenReturn(true);
+        when(stubGateway.advertiserHasFunds(advertiser)).thenReturn(true);
+    
+        // Act
+        board.publish(ad, stubDb, stubGateway);
+    
+        // Assert: El anuncio está en el board
+        Optional<Advertisement> result = board.findByTitle(title);
+        assertTrue(result.isPresent(), "El anuncio debería estar publicado");
+        assertEquals(advertiser, result.get().advertiser, "El anunciante debe coincidir");
+    
+        // Verificar que se llamó a chargeAdvertiser una vez
+        verify(stubGateway, times(1)).chargeAdvertiser(advertiser);
+        verify(stubDb, times(1)).advertiserIsRegistered(advertiser);
+        verify(stubGateway, times(1)).advertiserHasFunds(advertiser);
+    }
+    
     //Publicar dos anuncios distintos por parte de "THE Company", borrar el primero y comprobar que si se busca ya no está en el tablón.
     @Test
+    @DisplayName("publishTwoAdsByTheCompanyAndDelteOne: Se publican dos anuncios por el dueño del board y se borra el primero")
         public void delete_deleteFirstCompanyAd_thenItIsNotFound() {
         // Arrange
         AdvertisementBoard board = new AdvertisementBoard();
@@ -106,7 +154,7 @@ public class AdvertisementBoardTest {
         // El primero ya no está
         assertTrue(board.findByTitle(title1).isEmpty());
 
-        // El segundo sigue estando (opcional pero útil)
+        // El segundo sigue estando 
         assertTrue(board.findByTitle(title2).isPresent());
 
         // Las dependencias externas no se usaron
@@ -119,6 +167,8 @@ public class AdvertisementBoardTest {
     //Para pasar esta prueba hay que modificar la clase AdvertisementBoard.
 
     @Test
+    @DisplayName("publishDuplicateAdByCompany: lanza excepción y no inserta el anuncio duplicado")
+
     public void publish_duplicateAdByCompany_throwsExceptionAndIsNotInserted() {
         // Arrange
         AdvertisementBoard board = new AdvertisementBoard();
@@ -150,8 +200,11 @@ public class AdvertisementBoardTest {
         verifyNoInteractions(dummyDb);
         verifyNoInteractions(dummyGateway);
     }
+    //Primero sin spy
     //Comprobar que si se intenta publicar un anuncio por parte del anunciante "Tim O'Theo" y el tablón está lleno se eleva la excepción AdvertisementBoardException.  Para pasar esta prueba hay que modificar la clase AdvertisementBoard.
     @Test
+    @DisplayName("publishWhenBoardIsFull: lanza excepción al publicar cuando el tablón está lleno")
+
     public void publish_publishWhenBoardIsFull_throwsException() {
         // Arrange
         AdvertisementBoard board = new AdvertisementBoard(); // Ya contiene 1 anuncio inicial
@@ -186,10 +239,12 @@ public class AdvertisementBoardTest {
         verify(stubGateway, never()).chargeAdvertiser("Extra"); // el título es distinto, pero la verificación ya cubre el caso
         }
 
-    //Tiene sentido usar un spy? considero que no, estamos comprobando el estado interno del tablón,
-    //por lo que siempre es mejor testear la implementación real, no obstante es posible hacerlo y conseguiríamos ahorrar complejidad y memoria,
+    //Tiene sentido usar un spy? podríamos decir que no, estamos comprobando el estado interno del tablón, no obstante al 
+    //usar un anunciante disitinto de The Company se están llamando dependencias externas y conseguiríamos ahorrar complejidad y memoria,
     
     @Test
+    @DisplayName("publishWhenBoardIsFullUsingSpy: lanza excepción y no se interactúa con las dependencias")
+
     public void publish_whenBoardIsFull_usingSpy_throwsException() {
     // Arrange
         String advertiser = "Tim O'Theo";
@@ -203,23 +258,21 @@ public class AdvertisementBoardTest {
         doReturn(AdvertisementBoard.MAX_BOARD_SIZE).when(spyBoard).numberOfPublishedAdvertisements();
 
         // Dependencias dummy simuladas con mocks
-        AdvertiserDatabase stubDb = mock(AdvertiserDatabase.class);
-        PaymentGateway stubGateway = mock(PaymentGateway.class);
+        AdvertiserDatabase dummyDb = mock(AdvertiserDatabase.class);
+        PaymentGateway dummyGateway = mock(PaymentGateway.class);
 
-        when(stubDb.advertiserIsRegistered(advertiser)).thenReturn(true);
-        when(stubGateway.advertiserHasFunds(advertiser)).thenReturn(true);
 
         // Act & Assert
         AdvertisementBoardException exception = assertThrows(
             AdvertisementBoardException.class,
-            () -> spyBoard.publish(ad, stubDb, stubGateway)
+            () -> spyBoard.publish(ad, dummyDb, dummyGateway)
         );
 
         assertEquals("The board is full. Cannot publish more advertisements.", exception.getMessage());
 
         // Verificar que NO se interactuó con las dependencias porque ni siquiera se pasa la validación del tamaño
-        verifyNoInteractions(stubDb);
-        verifyNoInteractions(stubGateway);
+        verifyNoInteractions(dummyDb);
+        verifyNoInteractions(dummyGateway);
     }
 
 }

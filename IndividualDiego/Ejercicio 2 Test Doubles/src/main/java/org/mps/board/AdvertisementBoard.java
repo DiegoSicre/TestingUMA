@@ -16,6 +16,7 @@ public class AdvertisementBoard {
     /**
      * Constructs a board containing an initial advertisement published by the {@code BOARD_OWNER}.
      */
+    
     public AdvertisementBoard() {
         advertisementList = new ArrayList<>();
         Advertisement initialAdvertisement = new Advertisement(
