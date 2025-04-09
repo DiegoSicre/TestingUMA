@@ -188,7 +188,7 @@ public class RonQI2SilverTest {
         @DisplayName("Detecta correctamente apnea independientemente del número de lecturas")
         void evaluarApneaSuenyo_detectsApneaCorrectly_withVariousReadings(int numLecturas) {
             // Arrange
-            when(dispositivoMock.leerSensorPresion()).thenReturn(20.0f);
+            when(dispositivoMock.leerSensorPresion()).thenReturn(20.0f); //Valores umbral en ambos casos 
             when(dispositivoMock.leerSensorSonido()).thenReturn(30.0f);
             IntStream.range(0, numLecturas).forEach(i -> ronQI2Silver.obtenerNuevaLectura());
 
@@ -203,7 +203,7 @@ public class RonQI2SilverTest {
         @DisplayName("No detecta apnea cuando las lecturas son bajas")
         void evaluarApneaSuenyo_doesNotDetectApnea_withLowReadings() {
             // Arrange
-            when(dispositivoMock.leerSensorPresion()).thenReturn(19.9f); //Límite umbral
+            when(dispositivoMock.leerSensorPresion()).thenReturn(19.9f); //Límite umbral en ambos casos
             when(dispositivoMock.leerSensorSonido()).thenReturn(29.9f);
             IntStream.range(0, 5).forEach(i -> ronQI2Silver.obtenerNuevaLectura());
 
