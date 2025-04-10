@@ -13,12 +13,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mps.dispositivo.Dispositivo;
+import org.mps.dispositivo.DispositivoSilver;
 
 @ExtendWith(MockitoExtension.class)
 public class RonQI2SilverTest {
@@ -39,19 +41,18 @@ public class RonQI2SilverTest {
     @DisplayName("Tests de inicializar")
     class InicializarTests {
 
-    /*
-     * Analiza con los caminos base qué pruebas se han de realizar para comprobar que al inicializar funciona como debe ser. 
-     * El funcionamiento correcto es que si es posible conectar ambos sensores y configurarlos, 
-     * el método inicializar de ronQI2 o sus subclases, 
-     * debería devolver true. En cualquier otro caso false. Se deja programado un ejemplo.
-     */
-    
+        @BeforeEach
+        public void init() {
+            // Inicializar el mock del dispositivo y la instancia de RonQI2Silver
+            dispositivoMock = mock(DispositivoSilver.class);
+            ronQI2Silver = new RonQI2Silver();
+            ronQI2Silver.anyadirDispositivo(dispositivoMock);
+        }
 
         @Test
         @DisplayName("Inicializar conecta y configura ambos sensores correctamente")
         void inicializar_correctlyConnectAndConfigureSensors_returnsTrue() {
             // Arrange
-           
             when(dispositivoMock.conectarSensorPresion()).thenReturn(true);
             when(dispositivoMock.configurarSensorPresion()).thenReturn(true);
             when(dispositivoMock.conectarSensorSonido()).thenReturn(true);
@@ -103,16 +104,60 @@ public class RonQI2SilverTest {
             verify(dispositivoMock, times(1)).conectarSensorSonido();
             verify(dispositivoMock, never()).configurarSensorSonido();
         }
+
+        @Test
+        @DisplayName("Inicializar conecta pero no configura el sensor de presión")
+        void inicializar_connectButNoConfigurePressureSensor_returnsFalse() {
+            // Arrange
+            when(dispositivoMock.conectarSensorPresion()).thenReturn(true);
+            when(dispositivoMock.configurarSensorPresion()).thenReturn(false);
+            when(dispositivoMock.conectarSensorSonido()).thenReturn(true);
+            when(dispositivoMock.configurarSensorSonido()).thenReturn(true);
+
+            // Act
+            boolean result = ronQI2Silver.inicializar();
+
+            // Assert
+            assertFalse(result);
+            verify(dispositivoMock, times(1)).conectarSensorPresion();
+            verify(dispositivoMock, times(1)).configurarSensorPresion();
+            verify(dispositivoMock, times(1)).conectarSensorSonido();
+            verify(dispositivoMock, times(1)).configurarSensorSonido();
+        }
+
+        @Test
+        @DisplayName("Inicializar conecta pero no configura el sensor de sonido")
+        void inicializar_connectButNoConfigureSoundSensor_returnsFalse() {
+            // Arrange
+            when(dispositivoMock.conectarSensorPresion()).thenReturn(true);
+            when(dispositivoMock.configurarSensorPresion()).thenReturn(true);
+            when(dispositivoMock.conectarSensorSonido()).thenReturn(true);
+            when(dispositivoMock.configurarSensorSonido()).thenReturn(false);
+
+            // Act
+            boolean result = ronQI2Silver.inicializar();
+
+            // Assert
+            assertFalse(result);
+            verify(dispositivoMock, times(1)).conectarSensorPresion();
+            verify(dispositivoMock, times(1)).configurarSensorPresion();
+            verify(dispositivoMock, times(1)).conectarSensorSonido();
+            verify(dispositivoMock, times(1)).configurarSensorSonido();
+        }
     }
+
 
     @Nested
     @DisplayName("Tests de reconectar")
     class ReconectarTests {
-           /*
-     * Un reconectar, comprueba si el dispositivo desconectado, en ese caso, conecta ambos y devuelve true si ambos han sido conectados. 
-     * Genera las pruebas que estimes oportunas para comprobar su correcto funcionamiento. 
-     * Centrate en probar si todo va bien, o si no, y si se llama a los métodos que deben ser llamados.
-     */
+
+        @BeforeEach
+        public void init() {
+            // Inicializar el mock del dispositivo y la instancia de RonQI2Silver
+            dispositivoMock = mock(DispositivoSilver.class);
+            ronQI2Silver = new RonQI2Silver();
+            ronQI2Silver.anyadirDispositivo(dispositivoMock);
+        }
 
         @Test
         @DisplayName("Reconectar cuando está desconectado y reconecta bien")
@@ -147,7 +192,60 @@ public class RonQI2SilverTest {
             verify(dispositivoMock, never()).conectarSensorPresion();
             verify(dispositivoMock, never()).conectarSensorSonido();
         }
+
+        @Test
+        @DisplayName("Reconectar cuando el dispositivo está desconectado y falla la reconexión del sensor de presión")
+        void reconectar_disconnectedDevice_failToReconnectPressureSensor_returnsFalse() {
+            // Arrange
+            when(dispositivoMock.estaConectado()).thenReturn(false);
+            when(dispositivoMock.conectarSensorPresion()).thenReturn(false); // Falla la reconexión del sensor de presión
+
+            // Act
+            boolean result = ronQI2Silver.reconectar();
+
+            // Assert
+            assertFalse(result);
+            verify(dispositivoMock, times(1)).estaConectado();
+            verify(dispositivoMock, times(1)).conectarSensorPresion();
+            verify(dispositivoMock, never()).conectarSensorSonido();
+        }
+
+        @Test
+        @DisplayName("Reconectar cuando el dispositivo está desconectado y falla la reconexión del sensor de sonido")
+        void reconectar_disconnectedDevice_failToReconnectSoundSensor_returnsFalse() {
+            // Arrange
+            when(dispositivoMock.estaConectado()).thenReturn(false);
+            when(dispositivoMock.conectarSensorPresion()).thenReturn(true);
+            when(dispositivoMock.conectarSensorSonido()).thenReturn(false); // Falla la reconexión del sensor de sonido
+
+            // Act
+            boolean result = ronQI2Silver.reconectar();
+
+            // Assert
+            assertFalse(result);
+            verify(dispositivoMock, times(1)).estaConectado();
+            verify(dispositivoMock, times(1)).conectarSensorPresion();
+            verify(dispositivoMock, times(1)).conectarSensorSonido();
+        }
+
+        @Test
+        @DisplayName("Reconectar cuando el dispositivo está desconectado y fallan ambos sensores al reconectarse")
+        void reconectar_disconnectedDevice_failToReconnectBothSensors_returnsFalse() {
+            // Arrange
+            when(dispositivoMock.estaConectado()).thenReturn(false);
+            when(dispositivoMock.conectarSensorPresion()).thenReturn(false); // Falla la reconexión del sensor de presión
+          
+            // Act
+            boolean result = ronQI2Silver.reconectar();
+
+            // Assert
+            assertFalse(result);
+            verify(dispositivoMock, times(1)).estaConectado();
+            verify(dispositivoMock, times(1)).conectarSensorPresion();
+            verify(dispositivoMock,never()).conectarSensorSonido();
+        }
     }
+
 
      
  /* Realiza un primer test para ver que funciona bien independientemente del número de lecturas.
