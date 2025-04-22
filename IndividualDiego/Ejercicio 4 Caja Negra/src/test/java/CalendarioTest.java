@@ -149,7 +149,7 @@ public class CalendarioTest {
     }
     // año juliano divisible ×4 → bisiesto
     @Test @DisplayName("29‑feb‑0008 (bisiesto Juliano) → FRIDAY")
-    @Tag("17") @Tag("14") @Tag("2") @Tag("23") @Tag("10")
+    @Tag("17") @Tag("14") @Tag("2") @Tag("22") @Tag("10")
     public void diaSemana_LeapYearJulian_DoesNotThrow() {
         assertDoesNotThrow(() -> Calendario.diaSemana(29, 2, 8));
     }
@@ -160,7 +160,7 @@ public class CalendarioTest {
         assertDoesNotThrow(() -> Calendario.diaSemana(29, 2, 2000));
     }
     /* Ya comprobado@Test @DisplayName("CE‑23 – Fecha juliana válida (10‑oct‑1500)")
-    @Tag("23") @Tag("14")
+    @Tag("22") @Tag("14")
     public void diaSemana_ValidJulianDateBeforeGregorian_DoesNotThrow() {
         assertDoesNotThrow(() -> Calendario.diaSemana(10, 10, 1500));
     }*/
