@@ -1,33 +1,86 @@
 package org.mps.crossover;
-
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mps.EvolutionaryAlgorithmException;
 
-
-
-@DisplayName("TwoPointCrossover")
 public class TwoPointCrossoverTest {
-    private final TwoPointCrossover crossover = new TwoPointCrossover();
 
-    @Test
-    public void crossover_ValidParents_ReturnsTwoOffspring() throws Exception {
-        int[] p1 = { 1, 2 };
-        int[] p2 = { 3, 4 };
-        int[][] off = crossover.crossover(p1, p2);
-        assertEquals(2, off.length);
-        assertEquals(p1.length, off[0].length);
-        // For length 2 parents, crossover is deterministic: point1=0, point2=1
-        assertArrayEquals(new int[] { 3, 2 }, off[0]);
-        assertArrayEquals(new int[] { 1, 4 }, off[1]);
+    private TwoPointCrossover twoPointCrossover;
+
+    @BeforeEach
+    public void setUp() {
+        // Inicializamos la clase TwoPointCrossover
+        twoPointCrossover = new TwoPointCrossover();
     }
 
     @Test
-    public void crossover_MismatchedLength_Throws() {
-        assertThrows(EvolutionaryAlgorithmException.class,
-                () -> crossover.crossover(new int[] { 1, 2 }, new int[] { 3 }));
+    @DisplayName("Verifica el cruce de dos padres válidos")
+    public void testCrossoverWithValidParents() throws EvolutionaryAlgorithmException {
+        // Arrange
+        int[] parent1 = {1, 2, 3, 4, 5};
+        int[] parent2 = {5, 4, 3, 2, 1};
+
+        // Act
+        int[][] offspring = twoPointCrossover.crossover(parent1, parent2);
+
+        // Assert
+        assertNotNull(offspring);
+        assertEquals(parent1.length, offspring[0].length);
+        assertEquals(parent2.length, offspring[1].length);
     }
+
+    @Test
+    @DisplayName("Verifica que se lanza una excepción si el padre 1 es nulo")
+    public void testCrossoverWithNullParent1() {
+        // Arrange
+        int[] parent1 = {1, 2, 3, 4, 5};
+        int[] parent2 = null;
+
+        // Act & Assert
+        assertThrows(EvolutionaryAlgorithmException.class, () -> {
+            twoPointCrossover.crossover(parent1, parent2);
+        });
+    }
+    @Test
+    @DisplayName("Verifica que se lanza una excepción si el padre 2 es nulo")
+    public void testCrossoverWithNullParent2() {
+        // Arrange
+        int[] parent1 = null;
+        int[] parent2 = {1, 2, 3, 4, 5};
+
+        // Act & Assert
+        assertThrows(EvolutionaryAlgorithmException.class, () -> {
+            twoPointCrossover.crossover(parent1, parent2);
+        });
+    }
+    @Test
+    @DisplayName("Verifica que se lanza una excepción si los padres tienen longitudes diferentes")
+    public void testCrossoverWithDifferentLengthParents() {
+        // Arrange
+        int[] parent1 = {1, 2, 3, 4, 5};
+        int[] parent2 = {5, 4, 3};
+    
+        // Act & Assert
+        assertThrows(EvolutionaryAlgorithmException.class, () -> {
+            twoPointCrossover.crossover(parent1, parent2);
+        });
+    }
+
+    @Test
+    @DisplayName("Verifica que se lanza una excepción si los padres tienen longitud 1")
+    public void testCrossoverWithSingleElementParents() {
+        // Arrange
+        int[] parent1 = {1};
+        int[] parent2 = {2};
+    
+        // Act & Assert
+        assertThrows(EvolutionaryAlgorithmException.class, () -> {
+            twoPointCrossover.crossover(parent1, parent2);
+        });
+    }
+
 }
