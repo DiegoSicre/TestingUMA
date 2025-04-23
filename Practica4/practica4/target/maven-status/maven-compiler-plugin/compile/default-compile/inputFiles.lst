@@ -1,8 +1,8 @@
+/home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/crossover/TwoPointCrossover.java
+/home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/selection/TournamentSelection.java
 /home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/EvolutionaryAlgorithm.java
 /home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/EvolutionaryAlgorithmException.java
-/home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/crossover/CrossoverOperator.java
-/home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/crossover/TwoPointCrossover.java
-/home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/mutation/GaussianMutation.java
 /home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/mutation/MutationOperator.java
 /home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/selection/SelectionOperator.java
-/home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/selection/TournamentSelection.java
+/home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/mutation/GaussianMutation.java
+/home/geralt/Programming/Testing/RepoTesting/TestingUMA/Practica4/practica4/src/main/java/org/mps/crossover/CrossoverOperator.java

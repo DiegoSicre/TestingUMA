@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TournamentSelection.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">mps4</a> &gt; <a href="index.source.html" class="el_package">org.mps.selection</a> &gt; <span class="el_source">TournamentSelection.java</span></div><h1>TournamentSelection.java</h1><pre class="source lang-java linenums">package org.mps.selection;
+
+import java.util.Random;
+
+import org.mps.EvolutionaryAlgorithmException;
+
+/**
+ * La clase TournamentSelection implementa el operador de selección por torneo
+ * en algoritmos evolutivos.
+ * Este operador de selección simula el proceso de competición entre individuos
+ * de una población para determinar los progenitores de la próxima generación.
+ *
+ * En la selección por torneo, se elige aleatoriamente un subconjunto de la
+ * población, conocido como &quot;torneo&quot;. Luego, se selecciona al individuo más apto
+ * dentro de este torneo para ser utilizado como progenitor.
+ *
+ * La principal ventaja de la selección por torneo es su simplicidad y
+ * eficiencia computacional. Además, permite controlar el tamaño del torneo, lo
+ * que puede afectar la presión selectiva y la diversidad genética en la
+ * población.
+ *
+ */
+
+public class TournamentSelection implements SelectionOperator {
+<span class="fc" id="L25">    private Random random = new Random();</span>
+    private int tournamentSize;
+
+<span class="fc" id="L28">    public TournamentSelection(int tournamentSize) throws EvolutionaryAlgorithmException {</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        if (tournamentSize &gt; 0)</span>
+<span class="fc" id="L30">            this.tournamentSize = tournamentSize;</span>
+        else
+<span class="fc" id="L32">            throw new EvolutionaryAlgorithmException(&quot;El tamanyo del torneo debe ser mayor que cero&quot;);</span>
+
+<span class="fc" id="L34">    }</span>
+
+    @Override
+    public int[] select(int[] population) throws EvolutionaryAlgorithmException {
+        int[] selected;
+<span class="pc bpc" id="L39" title="2 of 6 branches missed.">        if (population != null &amp;&amp; population.length &gt; 0 &amp;&amp; population.length &gt; tournamentSize) {</span>
+<span class="fc" id="L40">            selected = new int[population.length];</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">            for (int i = 0; i &lt; population.length; i++) {</span>
+<span class="fc" id="L42">                int best = -1;</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">                for (int j = 0; j &lt; tournamentSize; j++) {</span>
+<span class="fc" id="L44">                    int candidate = population[random.nextInt(population.length)];</span>
+<span class="fc bfc" id="L45" title="All 4 branches covered.">                    if (best == -1 || candidate &gt; best) {</span>
+<span class="fc" id="L46">                        best = candidate;</span>
+                    }
+                }
+<span class="fc" id="L49">                selected[i] = best;</span>
+            }
+<span class="fc" id="L51">        } else {</span>
+<span class="fc" id="L52">            throw new EvolutionaryAlgorithmException(&quot;No se ha podido realizar la selección&quot;);</span>
+        }
+<span class="fc" id="L54">        return selected;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

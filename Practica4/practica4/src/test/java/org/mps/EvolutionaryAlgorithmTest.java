@@ -1,6 +1,7 @@
 package org.mps;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,23 +24,65 @@ import org.mps.selection.SelectionOperator;
  *  ▸ Tests follow the AAA pattern and use descriptive names.
  */
 @ExtendWith(MockitoExtension.class)
-public class EvolutionaryAlgorithmWhiteBoxTest {
+public class EvolutionaryAlgorithmTest {
 
     // ────────────────────────────────────────────────────────────────────────────
     // EvolutionaryAlgorithm
     // ────────────────────────────────────────────────────────────────────────────
+    @Mock
+    private SelectionOperator selectionOp;
+    @Mock
+    private MutationOperator mutationOp;
+    @Mock
+    private CrossoverOperator crossoverOp;
+
+    private EvolutionaryAlgorithm ea;
+
+    @Nested
+    @DisplayName("EvolutionaryAlgorithm constructor")
+    public class ConstructorTest {
+
+        @Test
+        public void constructor_AllValid_NoException() {
+            assertDoesNotThrow(() -> new EvolutionaryAlgorithm(selectionOp, mutationOp, crossoverOp));
+        }
+
+        @Test
+        public void constructor_NullSelection_Throws() {
+            assertThrows(EvolutionaryAlgorithmException.class, () ->
+                    new EvolutionaryAlgorithm(null, mutationOp, crossoverOp));
+        }
+
+        @Test
+        public void constructor_NullMutation_Throws() {
+            assertThrows(EvolutionaryAlgorithmException.class, () ->
+                    new EvolutionaryAlgorithm(selectionOp, null, crossoverOp));
+        }
+
+        @Test
+        public void constructor_NullCrossover_Throws() {
+            assertThrows(EvolutionaryAlgorithmException.class, () ->
+                    new EvolutionaryAlgorithm(selectionOp, mutationOp, null));
+        }
+
+        @Test
+        public void constructor_AllNull_Throws() {
+            assertThrows(EvolutionaryAlgorithmException.class, () ->
+                    new EvolutionaryAlgorithm(null, null, null));
+        }
+
+        @Test
+        public void constructor_TwoNulls_Throws() {
+            assertThrows(EvolutionaryAlgorithmException.class, () ->
+                    new EvolutionaryAlgorithm(null, mutationOp, null));
+        }
+    }
 
     @Nested
     @DisplayName("EvolutionaryAlgorithm#optimize")
     public class OptimizeTest {
-        @Mock
-        private SelectionOperator selectionOp;
-        @Mock
-        private MutationOperator mutationOp;
-        @Mock
-        private CrossoverOperator crossoverOp;
-
-        private EvolutionaryAlgorithm ea;
+        
+        //Tenemos que testear todos los casos posibles del constructor
 
         @BeforeEach
         void setUp() throws EvolutionaryAlgorithmException {
@@ -98,28 +141,11 @@ public class EvolutionaryAlgorithmWhiteBoxTest {
         @DisplayName("Odd population size ⇒ IndexOutOfBoundsException (latent bug)")
         public void optimize_OddPopulation_FailsFast() throws Exception {
             int[][] population = { { 1, 1 }, { 2, 2 }, { 3, 3 } };
-            when(selectionOp.select(any(int[].class))).thenAnswer(inv -> inv.getArgument(0));
-            when(crossoverOp.crossover(any(int[].class), any(int[].class))).thenReturn(new int[][] { { 1, 1 }, { 1, 1 } });
-            when(mutationOp.mutate(any(int[].class))).thenAnswer(inv -> inv.getArgument(0));
-
-            assertThrows(ArrayIndexOutOfBoundsException.class, () -> ea.optimize(population));
+           
+            assertThrows(EvolutionaryAlgorithmException.class, () -> ea.optimize(population));
         }
     }
 
-   
-    // ────────────────────────────────────────────────────────────────────────────
-    // TwoPointCrossover
-    // ────────────────────────────────────────────────────────────────────────────
 
-    
-    // ────────────────────────────────────────────────────────────────────────────
-    // GaussianMutation
-    // ────────────────────────────────────────────────────────────────────────────
-
-
-
-    // ────────────────────────────────────────────────────────────────────────────
-    // TournamentSelection
-    // ────────────────────────────────────────────────────────────────────────────
 
 }

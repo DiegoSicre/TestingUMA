@@ -46,8 +46,9 @@ public class EvolutionaryAlgorithm {
 
     public int[][] optimize(int[][] population) throws EvolutionaryAlgorithmException {
 
-        if (population != null && population.length  > 0 ) {
+        if (population != null && population.length  > 0  && (population.length % 2) == 0) {
             // Creamos una nueva población para los descendientes
+            //int[row][col]
             int[][] offspringPopulation = new int[population.length][population[0].length];
 
             // Aplicamos operadores de selección y cruce para generar descendientes
@@ -84,6 +85,7 @@ public class EvolutionaryAlgorithm {
      * caso se ha establecido
      * como el que tiene menor suma de sus elementos
      */
+    //Este método no compara poblaciones, compara individuos
     private boolean better(int[] population1, int[] population2) {
         int suma1 = 0;
         int suma2 = 0;
