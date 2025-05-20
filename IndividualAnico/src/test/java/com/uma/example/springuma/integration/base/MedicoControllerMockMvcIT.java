@@ -47,17 +47,22 @@ class MedicoControllerMockMvcIT {
         Medico medico = new Medico();
         medico.setId(2L);
         medico.setNombre("Dr. Strange");
-
+        // Act 
         mockMvc.perform(post("/medico")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(medico)))
                 .andExpect(status().isCreated());
 
-        // Act & Assert
+        // Assert
         mockMvc.perform(get("/medicos"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", not(empty())));
+
+        mockMvc.perform(get("/medicos"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].nombre", is("Dr. Strange")));
     }
 
     @Test
@@ -68,6 +73,7 @@ class MedicoControllerMockMvcIT {
         medico.setId(3L);
         medico.setNombre("Dr. Old");
 
+        // Act
         mockMvc.perform(post("/medico")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(medico)))
@@ -75,12 +81,17 @@ class MedicoControllerMockMvcIT {
 
         medico.setNombre("Dr. Updated");
 
-        // Act & Assert
+        // Assert
         mockMvc.perform(put("/medico")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(medico)))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Updated")));
+
+        mockMvc.perform(get("/medicos"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[?(@.id==3)].nombre").value("Dr. Updated"));
     }
 
     @Test
@@ -102,6 +113,11 @@ class MedicoControllerMockMvcIT {
                 .content(objectMapper.writeValueAsString(medico)))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Eliminado")));
+
+        mockMvc.perform(get("/medicos"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[?(@.id==4)]", empty()));
     }
 
     @Test
@@ -117,6 +133,8 @@ class MedicoControllerMockMvcIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(medico)))
                 .andExpect(status().is5xxServerError());
+
+        
     }
 
     @Test
@@ -144,5 +162,41 @@ class MedicoControllerMockMvcIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id==5)].nombre").value("Dr. Editado"));
     }
+
+        @Test
+        @DisplayName("Camino feliz: Crear, Modificar, Obtener y Eliminar un médico")
+        void happyPath_create_modify_get_delete_medico() throws Exception {
+        // Crear un médico
+        Medico medico = new Medico();
+        medico.setId(6L);
+        medico.setNombre("Dr. Camino Feliz");
+        mockMvc.perform(post("/medico")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(medico)))
+                .andExpect(status().isCreated())
+                .andExpect(content().string(containsString("Dr. Camino Feliz")));
+        // Modificar el médico
+        medico.setNombre("Dr. Modificado");
+        mockMvc.perform(put("/medico")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(medico)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Modificado")));
+        // Obtener el médico modificado
+        mockMvc.perform(get("/medicos"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[?(@.id==6)].nombre").value("Dr. Modificado"));
+        // Eliminar el médico
+        mockMvc.perform(delete("/medico")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(medico)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Eliminado")));
+        // Comprobar que el médico ha sido eliminado
+        mockMvc.perform(get("/medicos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id==6)]", empty()));
+        }
 }
 

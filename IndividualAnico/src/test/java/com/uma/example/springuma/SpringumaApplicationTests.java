@@ -8,6 +8,7 @@ class SpringumaApplicationTests {
 
 	@Test
 	void contextLoads() {
+		
 	}
 
 }

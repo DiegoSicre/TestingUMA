@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -49,6 +51,13 @@ class PacienteControllerMockMvcIT {
                 .content(objectMapper.writeValueAsString(paciente)))
                 .andExpect(status().isCreated())
                 .andExpect(content().string(containsString("Paciente Uno")));
+
+        mockMvc.perform(get("/pacientes"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", not(empty())))
+                .andExpect(jsonPath("$[0].nombre", containsString("Paciente Uno")))
+                .andExpect(jsonPath("$[0].medico.nombre", containsString("Dr. Asignador")));
     }
 
     @Test
@@ -84,6 +93,12 @@ class PacienteControllerMockMvcIT {
                 .content(objectMapper.writeValueAsString(paciente)))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Dr. Nuevo")));
+        
+        // Assert
+        mockMvc.perform(get("/pacientes"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[?(@.id==200)].medico.nombre").value("Dr. Nuevo"));
     }
 
     @Test
@@ -108,5 +123,64 @@ class PacienteControllerMockMvcIT {
                 .content(objectMapper.writeValueAsString(paciente)))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Eliminado")));
+        
+        mockMvc.perform(get("/pacientes"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[?(@.id==300)]").doesNotExist());
     }
+
+        @Test
+        @DisplayName("Camino feliz: Asociar un paciente a un médico existente, Editar paciente y editar medico y detectar cambios")
+        void associatePacienteToExistingMedico_andEdit() throws Exception {
+            Medico medico = new Medico();
+            medico.setId(40L);
+            medico.setNombre("Dr. Asociador");
+
+            mockMvc.perform(post("/medico")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(medico)))
+                    .andExpect(status().isCreated());
+
+            Paciente paciente = new Paciente();
+            paciente.setId(400L);
+            paciente.setNombre("Paciente Asociado");
+            paciente.setMedico(medico);
+
+            mockMvc.perform(post("/paciente")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(paciente)))
+                    .andExpect(status().isCreated())
+                    .andExpect(content().string(containsString("Paciente Asociado")));
+
+            mockMvc.perform(get("/pacientes"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$", not(empty())))
+                    .andExpect(jsonPath("$[0].nombre", containsString("Paciente Asociado")))
+                    .andExpect(jsonPath("$[0].medico.nombre", containsString("Dr. Asociador")));
+
+            // Editar el médico
+            medico.setNombre("Dr. Modificado");
+            mockMvc.perform(put("/medico")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(medico)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("Modificado")));
+
+            // Editar el paciente
+            paciente.setNombre("Paciente Modificado");
+            mockMvc.perform(put("/paciente")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(paciente)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("Paciente Modificado")));
+
+            // Verificar cambios
+            mockMvc.perform(get("/pacientes"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$[?(@.id==400)].nombre").value("Paciente Modificado"))
+                    .andExpect(jsonPath("$[?(@.id==400)].medico.nombre").value("Dr. Modificado"));
+        }
 }
