@@ -50,7 +50,8 @@ public class ImagenController {
         
     }
  
-	@PostMapping(value ="/imagen",     consumes = { MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE} )
+	@PostMapping(value ="/imagen",     consumes = { MediaType.MULTIPART_FORM_DATA_VALUE, 
+        MediaType.APPLICATION_JSON_VALUE} )
 	public ResponseEntity<?> uploadImage(@RequestPart("image") MultipartFile file,
             @RequestPart("paciente") Paciente paciente) throws IOException {
 		String uploadImage = imagenService.uploadImage(file, paciente);
