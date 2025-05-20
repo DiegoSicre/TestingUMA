@@ -57,7 +57,10 @@ public class ImagenController {
 		String uploadImage = imagenService.uploadImage(file, paciente);
 		return ResponseEntity.ok(uploadImage);
 	}
-
+    //Cuando devuelves un reponse entity tienes control sobre los estados http que devuelves,
+    //sobre los cuerpos que devuelves y sobre los encabezados, mientras que cuando envías la entidad
+    //que estás rescatando desde el service que a su vez interactua con el repository, en ese caso, spring
+    //se encarga de serializar el objeto y establece el estado como 200 ok, sin que tu tengas control y mete el json en el cuerpo
     @GetMapping("/imagen/paciente/{id}")
     public List<Imagen> getImagenes (@PathVariable("id") Long id) {
         return imagenService.getImagenesPaciente(id);

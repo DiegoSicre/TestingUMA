@@ -1,4 +1,4 @@
-package com.uma.example.springuma.integration.base;
+package com.uma.example.springuma.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uma.example.springuma.model.Medico;
