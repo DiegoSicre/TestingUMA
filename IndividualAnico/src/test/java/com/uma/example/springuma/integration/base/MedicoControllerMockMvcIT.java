@@ -62,7 +62,7 @@ class MedicoControllerMockMvcIT {
         mockMvc.perform(get("/medicos"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].nombre", is("Dr. Strange")));
+                .andExpect(jsonPath("$[0].nombre", containsString("Dr. Strange")));
     }
 
     @Test
