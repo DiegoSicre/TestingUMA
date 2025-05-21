@@ -1,6 +1,7 @@
 package com.uma.example.springuma.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import com.uma.example.springuma.model.Medico;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -24,179 +26,107 @@ class MedicoControllerMockMvcIT {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    @DisplayName("Crear un médico correctamente")
-    void createMedico_successfully() throws Exception {
+        @Test
+        @DisplayName("POST /medico - Crear un médico correctamente y recuperarlo con GET /medico/{id}")
+        void createMedicoPost_shouldRespondCreationSuccessAndRetrievableById() throws Exception {
         // Arrange
         Medico medico = new Medico();
-        medico.setId(1L);
+
         medico.setNombre("Dr. House");
 
-        // Act & Assert
-        mockMvc.perform(post("/medico")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isCreated())
-                .andExpect(content().string(containsString("Dr. House")));
-    }
-
-    @Test
-    @DisplayName("Obtener todos los médicos debe devolver una lista con al menos un médico")
-    void getAllMedicos_successfully() throws Exception {
-        // Arrange
-        Medico medico = new Medico();
-        medico.setId(2L);
-        medico.setNombre("Dr. Strange");
-        // Act 
+        // Act: POST /medico
         mockMvc.perform(post("/medico")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(medico)))
                 .andExpect(status().isCreated());
 
-        // Assert
-        mockMvc.perform(get("/medicos"))
+        // Assert: GET /medico/1
+        mockMvc.perform(get("/medico/{id}", 1L))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", not(empty())));
-
-        mockMvc.perform(get("/medicos"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].nombre", containsString("Dr. Strange")));
-    }
-
-    @Test
-    @DisplayName("Actualizar un médico existente correctamente")
-    void updateMedico_successfully() throws Exception {
-        // Arrange
-        Medico medico = new Medico();
-        medico.setId(3L);
-        medico.setNombre("Dr. Old");
-
-        // Act
-        mockMvc.perform(post("/medico")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isCreated());
-
-        medico.setNombre("Dr. Updated");
-
-        // Assert
-        mockMvc.perform(put("/medico")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Updated")));
-
-        mockMvc.perform(get("/medicos"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[?(@.id==3)].nombre").value("Dr. Updated"));
-    }
-
-    @Test
-    @DisplayName("Eliminar un médico correctamente")
-    void deleteMedico_successfully() throws Exception {
-        // Arrange
-        Medico medico = new Medico();
-        medico.setId(4L);
-        medico.setNombre("Dr. Who");
-
-        mockMvc.perform(post("/medico")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isCreated());
-
-        // Act & Assert
-        mockMvc.perform(delete("/medico")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Eliminado")));
-
-        mockMvc.perform(get("/medicos"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[?(@.id==4)]", empty()));
-    }
-
-    @Test
-    @DisplayName("Eliminar un médico que no existe debe devolver error")
-    void deleteNonexistentMedico_returnsError() throws Exception {
-        // Arrange
-        Medico medico = new Medico();
-        medico.setId(999L);
-        medico.setNombre("Ficticio");
-
-        // Act & Assert
-        mockMvc.perform(delete("/medico")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().is5xxServerError());
-
-        
-    }
-
-    @Test
-    @DisplayName("Editar un médico y comprobar que se ha modificado")
-    void editMedico_andVerifyUpdate() throws Exception {
-        // Arrange
-        Medico medico = new Medico();
-        medico.setId(5L);
-        medico.setNombre("Dr. Original");
-
-        mockMvc.perform(post("/medico")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isCreated());
-
-        // Act
-        medico.setNombre("Dr. Editado");
-        mockMvc.perform(put("/medico")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isOk());
-
-        // Assert
-        mockMvc.perform(get("/medicos"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.id==5)].nombre").value("Dr. Editado"));
-    }
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.nombre").value("Dr. House"));
+        }
 
         @Test
-        @DisplayName("Camino feliz: Crear, Modificar, Obtener y Eliminar un médico")
-        void happyPath_create_modify_get_delete_medico() throws Exception {
-        // Crear un médico
+        @DisplayName("GET /medico/dni/{dni} - Crear, actualizar y recuperar médico correctamente por DNI")
+        void getMedicoByDni_shouldReturnUpdatedMedico() throws Exception {
+        // Arrange
         Medico medico = new Medico();
-        medico.setId(6L);
-        medico.setNombre("Dr. Camino Feliz");
+        medico.setDni("abc-123");
+        medico.setNombre("Dr. Original");
+        medico.setEspecialidad("Traumatología");
+
+        // Crear médico
         mockMvc.perform(post("/medico")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isCreated())
-                .andExpect(content().string(containsString("Dr. Camino Feliz")));
-        // Modificar el médico
-        medico.setNombre("Dr. Modificado");
+                .andExpect(status().isCreated());
+
+        // Recuperar ID asignado automáticamente usando GET por DNI
+        MvcResult result = mockMvc.perform(get("/medico/dni/{dni}", "abc-123"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String json = result.getResponse().getContentAsString();
+        Integer id = JsonPath.parse(json).read("$.id");
+
+        // Modificar el médico con el ID real
+        medico.setId(id);
+        medico.setNombre("Dr. Actualizado");
+
+        // Actualizar médico
         mockMvc.perform(put("/medico")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Modificado")));
-        // Obtener el médico modificado
-        mockMvc.perform(get("/medicos"))
+                .andExpect(status().isNoContent());
+
+        // Act & Assert: recuperar por DNI
+        mockMvc.perform(get("/medico/dni/{dni}", "abc-123"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[?(@.id==6)].nombre").value("Dr. Modificado"));
-        // Eliminar el médico
-        mockMvc.perform(delete("/medico")
+                .andExpect(jsonPath("$.nombre").value("Dr. Actualizado"))
+                .andExpect(jsonPath("$.dni").value("abc-123"));
+        }
+
+
+        @Test
+        @DisplayName("GET /medico/{id} - Crear, eliminar y comprobar que el médico ya no existe")
+        void getMedicoById_shouldFailAfterDeletion() throws Exception {
+        // Arrange
+        Medico medico = new Medico();
+
+        medico.setNombre("Dr. Temporal");
+        medico.setDni("temp-456");
+
+ 
+
+        // Crear médico
+        mockMvc.perform(post("/medico")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(medico)))
+                .andExpect(status().isCreated());
+        //Recuperarlo para ver el id asignado por la BBDD        
+        MvcResult result = mockMvc.perform(get("/medico/dni/{dni}", "temp-456"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Eliminado")));
-        // Comprobar que el médico ha sido eliminado
-        mockMvc.perform(get("/medicos"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.id==6)]", empty()));
+                .andReturn();
+
+        String json = result.getResponse().getContentAsString();
+        Integer id = JsonPath.parse(json).read("$.id");
+
+        // Modificar el médico con el ID real
+        medico.setId(id);                
+
+        // Eliminar médico
+        mockMvc.perform(delete("/medico/{id}", id))
+                .andExpect(status().isOk());
+
+        // Act & Assert: intentar recuperar por ID
+        mockMvc.perform(get("/medico/{id}", id))
+                .andExpect(status().is5xxServerError()); // el controlador devuelve 500 si no lo encuentra
         }
+
+
+
 }
 
