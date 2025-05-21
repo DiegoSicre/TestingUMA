@@ -126,6 +126,65 @@ class MedicoControllerMockMvcIT {
                 .andExpect(status().is5xxServerError()); // el controlador devuelve 500 si no lo encuentra
         }
 
+        //Ahora juntamos las funcionalidades y creamos un camino feliz que incluye todas las acciones anteriores
+        @Test
+@DisplayName("FULL flow médico: crear → leer → modificar → leer por ID y DNI → borrar → comprobar ausencia")
+void medicoCaminoFeliz_shouldCoverFullLifecycle() throws Exception {
+
+    /* ---------- 1. CREAR MÉDICO ---------- */
+    Medico medico = new Medico();
+    medico.setNombre("Dr. Camino Feliz");
+    medico.setDni("dni-999");
+    medico.setEspecialidad("Dermatología");
+
+    mockMvc.perform(post("/medico")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(medico)))
+            .andExpect(status().isCreated());
+
+    /* ---------- 2. OBTENER ID REAL VÍA GET /medico/dni/{dni} ---------- */
+    MvcResult resMed = mockMvc.perform(get("/medico/dni/{dni}", "dni-999"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    long id = JsonPath.parse(resMed.getResponse().getContentAsString())
+                      .read("$.id", Long.class);
+
+    /* ---------- 3. VERIFICAR CON GET /medico/{id} ---------- */
+    mockMvc.perform(get("/medico/{id}", id))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.nombre").value("Dr. Camino Feliz"))
+            .andExpect(jsonPath("$.dni").value("dni-999"));
+
+    /* ---------- 4. MODIFICAR EL MÉDICO ---------- */
+    medico.setId(id);
+    medico.setNombre("Dr. C. Feliz Modificado");
+
+    mockMvc.perform(put("/medico")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(medico)))
+            .andExpect(status().isNoContent());          // 204
+
+    /* ---------- 5. VERIFICAR CAMBIOS POR ID Y POR DNI ---------- */
+    mockMvc.perform(get("/medico/{id}", id))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.nombre").value("Dr. C. Feliz Modificado"));
+
+    mockMvc.perform(get("/medico/dni/{dni}", "dni-999"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.nombre").value("Dr. C. Feliz Modificado"));
+
+    /* ---------- 6. BORRAR MÉDICO ---------- */
+    mockMvc.perform(delete("/medico/{id}", id))
+            .andExpect(status().isOk());
+
+    /* ---------- 7. COMPROBAR QUE YA NO EXISTE ---------- */
+    mockMvc.perform(get("/medico/{id}", id))
+            .andExpect(status().is5xxServerError());   // el controlador devuelve 500
+
+    mockMvc.perform(get("/medico/dni/{dni}", "dni-999"))
+            .andExpect(status().isNotFound());        // devuelve 404 cuando no existe
+}
 
 
 }

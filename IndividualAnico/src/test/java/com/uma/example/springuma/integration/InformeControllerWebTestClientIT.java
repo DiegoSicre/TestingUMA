@@ -179,7 +179,74 @@ class InformeControllerWebTestClientIT extends AbstractIntegration {
                 .exchange()
                 .expectStatus().isOk() // Verificar que la respuesta sea exitosa
                 .expectBody().isEmpty(); // Verificar que el cuerpo esté vacío
-    }
+        }
+        //Ahora juntamos las funcionalidades y creamos un camino feliz que incluye todas las acciones anteriores
+        @Test
+        @DisplayName("FULL flow informes: crear → leer → listar → borrar y comprobar ausencia")
+        void informeCaminoFeliz_shouldCoverFullLifecycle() {
+
+        /* ---------- 1. CREAR PRIMER INFORME (id = 1) ---------- */
+        Informe informe1 = new Informe("Predicción A", "Contenido A", imagen);
+        client.post()
+                .uri("/informe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(informe1)
+                .exchange()
+                .expectStatus().isCreated();
+
+        /* 1a. Recuperar y verificar */
+        client.get()
+                .uri("/informe/1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.contenido").isEqualTo("Contenido A");
+
+        /* ---------- 2. CREAR SEGUNDO INFORME (id = 2) ---------- */
+        Informe informe2 = new Informe("Predicción B", "Contenido B", imagen);
+        client.post()
+                .uri("/informe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(informe2)
+                .exchange()
+                .expectStatus().isCreated();
+
+        /* ---------- 3. Lista debe contener 2 informes ---------- */
+        List<Informe> listaInicial = client.get()
+                .uri("/informe/imagen/1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Informe.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(listaInicial).hasSize(2);
+
+        /* ---------- 4. BORRAR INFORME 1 ---------- */
+        client.delete()
+                .uri("/informe/1")
+                .exchange()
+                .expectStatus().isNoContent();
+
+        /* 4a. Recuperarlo ⇒ cuerpo vacío */
+        client.get()
+                .uri("/informe/1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().isEmpty();
+
+        /* 4b. Lista ahora debe contener solo 1 informe */
+        List<Informe> listaFinal = client.get()
+                .uri("/informe/imagen/1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Informe.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(listaFinal).hasSize(1);
+        assertThat(listaFinal.get(0).getContenido()).isEqualTo("Contenido B");
+        }
 
 
-}
+        }

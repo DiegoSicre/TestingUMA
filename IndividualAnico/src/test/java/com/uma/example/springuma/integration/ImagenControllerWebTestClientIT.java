@@ -276,4 +276,107 @@ class ImagenControllerWebTestClientIT extends AbstractIntegration {
                 .exchange()
                 .expectStatus().is5xxServerError(); // Esperar un estado 404 Not Found
     }
+
+
+
+    //Ahora juntamos las funcionalidades y creamos un camino feliz que incluye todas las acciones anteriores
+    @Test
+    @DisplayName("FULL flow imágenes: subir-descargar-predecir-listar-borrar")
+    void imagenCaminoFeliz_shouldCoverFullLifecycle() throws Exception {
+
+        /* ---------- 1. CREAR PACIENTE ---------- */
+        client.post()
+            .uri("/paciente")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(paciente)                     // ‘paciente’ viene del @PostConstruct
+            .exchange()
+            .expectStatus().isCreated();
+
+        /* ---------- 2. SUBIR PRIMERA IMAGEN ---------- */
+        File img1 = new File("./src/test/resources/healthy.png");
+        MultipartBodyBuilder mb1 = new MultipartBodyBuilder();
+        mb1.part("image", new FileSystemResource(img1));
+        mb1.part("paciente", paciente, MediaType.APPLICATION_JSON);
+
+        client.post()
+            .uri("/imagen")
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(BodyInserters.fromMultipartData(mb1.build()))
+            .exchange()
+            .expectStatus().isOk();
+
+        /* ---------- 3. OBTENER ID PRIMERA IMAGEN ---------- */
+        Long id1 = client.get().uri("/imagen/paciente/{id}", paciente.getId())
+                        .exchange()
+                        .expectStatus().isOk()
+                        .returnResult(Imagen.class)
+                        .getResponseBody()
+                        .blockLast()          // la recién creada es la última
+                        .getId();
+
+        /* ---------- 4. DESCARGAR, INFO y PREDICCIÓN ---------- */
+        // descarga
+        client.get().uri("/imagen/{id}", id1)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType("image/png")
+            .expectBody(byte[].class)
+            .value(bytes -> { assert bytes.length > 0; });
+
+        // info
+        client.get().uri("/imagen/info/{id}", id1)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(id1)
+            .jsonPath("$.nombre").isEqualTo("healthy.png");
+
+        // predicción
+        client.get().uri("/imagen/predict/{id}", id1)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.status").value(s -> {
+                assert s.equals("Cancer") || s.equals("Not cancer");
+            });
+
+        /* ---------- 5. SUBIR SEGUNDA IMAGEN ---------- */
+        File img2 = new File("./src/test/resources/healthy.png");
+        MultipartBodyBuilder mb2 = new MultipartBodyBuilder();
+        mb2.part("image", new FileSystemResource(img2));
+        mb2.part("paciente", paciente, MediaType.APPLICATION_JSON);
+
+        client.post()
+            .uri("/imagen")
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(BodyInserters.fromMultipartData(mb2.build()))
+            .exchange()
+            .expectStatus().isOk();
+
+        /* ---------- 6. COMPROBAR QUE HAY DOS IMÁGENES ---------- */
+        client.get().uri("/imagen/paciente/{id}", paciente.getId())
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$", hasSize(2));
+
+        /* ---------- 7. ELIMINAR PRIMERA IMAGEN ---------- */
+        client.delete().uri("/imagen/{id}", id1)
+            .exchange()
+            .expectStatus().is2xxSuccessful();
+
+        /* ---------- 8. INTENTAR RECUPERARLA (DEBE FALLAR) ---------- */
+        client.get().uri("/imagen/info/{id}", id1)
+            .exchange()
+            .expectStatus().is5xxServerError();
+
+        /* ---------- 9. CONFIRMAR QUE SOLO QUEDA UNA ---------- */
+        client.get().uri("/imagen/paciente/{id}", paciente.getId())
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$", hasSize(1));
+    }
+
+    
 }
