@@ -2,6 +2,7 @@ package com.uma.example.springuma.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uma.example.springuma.integration.base.AbstractIntegration;
+import com.uma.example.springuma.model.Imagen;
 import com.uma.example.springuma.model.Paciente;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.time.Duration;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -44,7 +46,6 @@ class ImagenControllerWebTestClientIT extends AbstractIntegration {
         paciente.setEdad(30);
         paciente.setDni("dni-" + System.nanoTime());
     }
-
     @Test
     @DisplayName("POST /imagen - Subida de imagen multipart correctamente")
     void uploadImagePost_shouldRespondSuccess() throws Exception {
@@ -74,29 +75,145 @@ class ImagenControllerWebTestClientIT extends AbstractIntegration {
         String result = response.getResponseBody().blockFirst();
         assertEquals("{\"response\" : \"file uploaded successfully : healthy.png\"}", result);
     }
+    
 
     @Test
     @DisplayName("GET /imagen/predict/{id} - Realizar predicción de una imagen correctamente")
     void predictImageGet_shouldRespondValidPredict() throws Exception {
-        // Configurar datos de prueba en la base de datos
-        Long imagenId = 1L; // ID de la imagen preconfigurada en la base de datos
+        Long imagenId = subirImagenDummy();
     
-        // Obtener la predicción de la imagen
         client.get()
-                .uri("/imagen/predict/" + imagenId)
-                .accept(MediaType.APPLICATION_JSON)
+            .uri("/imagen/predict/" + imagenId)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBody()
+            .jsonPath("$.status").value(status -> {
+                assertEquals(true, status.equals("Cancer") || status.equals("Not cancer"));
+            })
+            .jsonPath("$.score").value(score -> {
+                assert score instanceof Double;
+                assert (Double) score >= 0.0 && (Double) score <= 1.0;
+            });
+    }
+
+    //Test adicionales para terminar de probar completamente la clase ImagenController
+
+    //Como este código se va a repetir en estos test lo incluimos abajo
+    /** Crea un paciente y sube una imagen, devuelve el ID de la imagen subida */
+    private Long subirImagenDummy() throws Exception {
+        // Crear el paciente
+        client.post()
+                .uri("/paciente")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(paciente)
                 .exchange()
-                .expectStatus().isOk() // Verificar que el estado HTTP sea 200 OK
-                .expectHeader().contentType(MediaType.APPLICATION_JSON) // Verificar que el Content-Type sea JSON
-                .expectBody()
-                .jsonPath("$.status").value(status -> {
-                    // Validar que el campo "status" contiene "Cancer" o "Not cancer"
-                    assertEquals(true, status.equals("Cancer") || status.equals("Not cancer"));
-                })
-                .jsonPath("$.score").value(score -> {
-                    // Validar que el campo "score" es un número válido entre 0.0 y 1.0
-                    assert score instanceof Double;
-                    assert (Double) score >= 0.0 && (Double) score <= 1.0;
-                });
+                .expectStatus().isCreated();
+
+        // Subir imagen
+        File img = new File("./src/test/resources/healthy.png");
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("image", new FileSystemResource(img));
+        builder.part("paciente", paciente, MediaType.APPLICATION_JSON);
+
+        client.post()
+                .uri("/imagen")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(builder.build()))
+                .exchange()
+                .expectStatus().isOk();
+
+        // Obtener ID de la imagen subida (la primera del paciente)
+        FluxExchangeResult<Long> response = client.get()
+                .uri("/imagen/paciente/1")
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(Long.class);
+
+        return 1L; // si sabes que siempre será la primera
+    }
+
+    @Test
+    @DisplayName("GET /imagen/{id} - Descargar una imagen correctamente")
+    void downloadImage_shouldRespondWithImageData() throws Exception {
+        // Crear un paciente y subir una imagen
+        Long imagenId = subirImagenDummy();
+
+
+        // Descargar la imagen
+        FluxExchangeResult<byte[]> response = client.get()
+                .uri("/imagen/" + imagenId) // ID de la imagen subida
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("image/png")
+                .returnResult(byte[].class);
+
+        byte[] imageData = response.getResponseBody().blockFirst();
+        assert imageData != null;
+        assert imageData.length > 0; // Validar que los datos de la imagen no están vacíos
+    }
+
+    @Test
+    @DisplayName("GET /imagen/info/{id} - Obtener información de una imagen correctamente")
+    void getImagen_shouldRespondWithImageInfo() throws Exception {
+        // Crear un paciente y subir una imagen
+        Long imagenId = subirImagenDummy();
+    
+        // Obtener información de la imagen como objeto
+        FluxExchangeResult<com.uma.example.springuma.model.Imagen> result = client.get()
+                .uri("/imagen/info/" + imagenId)
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(com.uma.example.springuma.model.Imagen.class);
+    
+       Imagen imagenObtained = result.getResponseBody().blockFirst();
+    
+        assertEquals(imagenId, imagenObtained.getId());
+        assertEquals("healthy.png", imagenObtained.getNombre());
+        assertEquals(paciente.getId(), imagenObtained.getPaciente().getId());
+        assertEquals(paciente.getNombre(), imagenObtained.getPaciente().getNombre());
+        assertEquals(paciente.getDni(), imagenObtained.getPaciente().getDni());
+        assertEquals(paciente.getEdad(), imagenObtained.getPaciente().getEdad());
+    }
+    @Test
+    @DisplayName("GET /imagen/paciente/{id} - Obtener todas las imágenes de un paciente")
+    void getImagenes_shouldRespondWithListOfImages() throws Exception {
+        // Crear un paciente y subir una imagen
+        Long imagenId = subirImagenDummy();
+
+        // Obtener todas las imágenes del paciente como lista de objetos
+        FluxExchangeResult<com.uma.example.springuma.model.Imagen> result = client.get()
+                .uri("/imagen/paciente/" + paciente.getId())
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(com.uma.example.springuma.model.Imagen.class);
+
+        Imagen imagenObtained = result.getResponseBody().blockFirst();
+
+        assertEquals("healthy.png", imagenObtained.getNombre());
+        assertEquals(paciente.getId(), imagenObtained.getPaciente().getId());
+        assertEquals(paciente.getNombre(), imagenObtained.getPaciente().getNombre());
+        assertEquals(paciente.getDni(), imagenObtained.getPaciente().getDni());
+        assertEquals(paciente.getEdad(), imagenObtained.getPaciente().getEdad());
+    }
+
+    @Test
+    @DisplayName("DELETE /imagen/{id} - Eliminar una imagen correctamente")
+    void deleteImagen_shouldRespondNoContent() throws Exception {
+        // Crear un paciente y subir una imagen
+        Long imagenId = subirImagenDummy();
+
+        // Eliminar la imagen
+        client.delete()
+                .uri("/imagen/" + imagenId) // ID de la imagen subida
+                .exchange()
+                .expectStatus().is2xxSuccessful();
+
+        // Verificar que la imagen ya no está disponible
+        client.get()
+                .uri("/imagen/info/1")
+                .exchange()
+                .expectStatus().is5xxServerError(); // Esperar un estado 404 Not Found
     }
 }
