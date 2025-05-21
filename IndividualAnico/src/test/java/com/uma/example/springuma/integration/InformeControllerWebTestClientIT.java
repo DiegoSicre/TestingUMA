@@ -19,8 +19,12 @@ import org.springframework.web.reactive.function.BodyInserters;
 import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.time.Duration;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.Matchers.hasSize;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.reactive.server.WebTestClient.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class InformeControllerWebTestClientIT extends AbstractIntegration {
@@ -105,7 +109,44 @@ class InformeControllerWebTestClientIT extends AbstractIntegration {
         assertEquals(informe.getContenido(), informeObtained.getContenido());
         assert informeObtained.getPrediccion().contains("status");
         assert informeObtained.getPrediccion().contains("score");
-    }
+        }
+        
+        @Test
+        @DisplayName("GET /informe/imagen/{id} - Obtener lista de informes correctamente")
+        void getInformes_shouldRespondWithListOfInformes() {
+        // Crear dos informes asociados a la imagen con ID 1
+        // Primer informe (ya creado en init)
+        client.post()
+                .uri("/informe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(informe)
+                .exchange()
+                .expectStatus().isCreated();
+        
+        // Segundo informe con contenido distinto
+        Informe informe2 = new Informe("Predicción modificada", "Contenido modificado", imagen);
+        informe2.setId(2L);
+        client.post()
+                .uri("/informe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(informe2)
+                .exchange()
+                .expectStatus().isCreated();
+        
+        // Consultar la lista de informes asociados a la imagen (se asume que la imagen tiene ID 1)
+        List<Informe> informes = client.get()
+        .uri("/informe/imagen/1")
+        .exchange()
+        .expectStatus().isOk()
+        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectBodyList(Informe.class)
+        .returnResult()
+        .getResponseBody();
+
+        assertThat(informes).hasSize(2);
+        assertThat(informes.get(0).getContenido()).isEqualTo(informe.getContenido());
+        assertThat(informes.get(1).getContenido()).isEqualTo(informe2.getContenido());
+}
     @Test
     @DisplayName("POST /informe - Crear y eliminar un informe correctamente")
     void createAndDeleteInforme_shouldRespondSuccess() {
@@ -117,7 +158,7 @@ class InformeControllerWebTestClientIT extends AbstractIntegration {
                 .exchange()
                 .expectStatus().isCreated();
     
-        // Verificar que el informe se haya creado correctamente
+        // Verificar que el informe se haya creado correctamente, se puede hacer tanto usando los objetos como el json
         client.get()
                 .uri("/informe/1") // ID del informe creado
                 .exchange()

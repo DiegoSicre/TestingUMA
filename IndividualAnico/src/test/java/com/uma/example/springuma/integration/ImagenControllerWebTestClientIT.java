@@ -176,27 +176,87 @@ class ImagenControllerWebTestClientIT extends AbstractIntegration {
         assertEquals(paciente.getDni(), imagenObtained.getPaciente().getDni());
         assertEquals(paciente.getEdad(), imagenObtained.getPaciente().getEdad());
     }
+
+    /** Sube la imagen indicada y devuelve el id que generó la BBDD */
+    private Long subirImagen(File fichero) throws Exception {
+        MultipartBodyBuilder mb = new MultipartBodyBuilder();
+        mb.part("image", new FileSystemResource(fichero));
+        mb.part("paciente", paciente, MediaType.APPLICATION_JSON);
+
+        client.post().uri("/imagen")
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(BodyInserters.fromMultipartData(mb.build()))
+            .exchange()
+            .expectStatus().isOk();
+
+        // Pedimos la última imagen del paciente y devolvemos su id
+        return client.get().uri("/imagen/paciente/{id}", paciente.getId())
+                    .exchange()
+                    .expectStatus().isOk()
+                    .returnResult(Imagen.class)
+                    .getResponseBody().blockLast()          // la que acabamos de crear
+                    .getId();
+    }
     @Test
-    @DisplayName("GET /imagen/paciente/{id} - Obtener todas las imágenes de un paciente")
-    void getImagenes_shouldRespondWithListOfImages() throws Exception {
-        // Crear un paciente y subir una imagen
+    @DisplayName("GET /imagen/paciente/{id} – devuelve las 2 imágenes subidas")
+    void getImagenes_shouldReturnBothImages() throws Exception {
         Long imagenId = subirImagenDummy();
 
-        // Obtener todas las imágenes del paciente como lista de objetos
-        FluxExchangeResult<com.uma.example.springuma.model.Imagen> result = client.get()
-                .uri("/imagen/paciente/" + paciente.getId())
+        // Subir otra imagen imagen
+        File img = new File("./src/test/resources/healthy.png");
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("image", new FileSystemResource(img));
+        builder.part("paciente", paciente, MediaType.APPLICATION_JSON);
+
+        client.post()
+                .uri("/imagen")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(builder.build()))
+                .exchange()
+                .expectStatus().isOk();
+
+        // Obtener ID de la imagen subida (la primera del paciente)
+        FluxExchangeResult<Long> response = client.get()
+                .uri("/imagen/paciente/1")
                 .exchange()
                 .expectStatus().isOk()
-                .returnResult(com.uma.example.springuma.model.Imagen.class);
+                .returnResult(Long.class);
 
-        Imagen imagenObtained = result.getResponseBody().blockFirst();
+        /* ---------- arrange ---------- */
+        
+        /* ---------- act & assert ----- */
+        client.get().uri("/imagen/paciente/{id}", paciente.getId())
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+                .jsonPath("$[0].nombre").value(v -> assertEquals("healthy.png", String.valueOf(v.toString())))
+                .jsonPath("$[1].nombre").value(v -> assertEquals("healthy.png", String.valueOf(v.toString())));
+                 
+            }
 
-        assertEquals("healthy.png", imagenObtained.getNombre());
-        assertEquals(paciente.getId(), imagenObtained.getPaciente().getId());
-        assertEquals(paciente.getNombre(), imagenObtained.getPaciente().getNombre());
-        assertEquals(paciente.getDni(), imagenObtained.getPaciente().getDni());
-        assertEquals(paciente.getEdad(), imagenObtained.getPaciente().getEdad());
-    }
+        //Mismo test con una sola imagen
+        @Test
+        @DisplayName("GET /imagen/paciente/{id} - Obtener todas las imágenes de un paciente")
+        void getImagenes_shouldRespondWithListOfImages() throws Exception {
+            // Crear un paciente y subir una imagen
+            Long imagenId = subirImagenDummy();
+
+            // Obtener todas las imágenes del paciente como lista de objetos
+            FluxExchangeResult<com.uma.example.springuma.model.Imagen> result = client.get()
+                    .uri("/imagen/paciente/" + paciente.getId())
+                    .exchange()
+                    .expectStatus().isOk()
+                    .returnResult(com.uma.example.springuma.model.Imagen.class);
+
+            Imagen imagenObtained = result.getResponseBody().blockFirst();
+
+            assertEquals("healthy.png", imagenObtained.getNombre());
+            assertEquals(paciente.getId(), imagenObtained.getPaciente().getId());
+            assertEquals(paciente.getNombre(), imagenObtained.getPaciente().getNombre());
+            assertEquals(paciente.getDni(), imagenObtained.getPaciente().getDni());
+            assertEquals(paciente.getEdad(), imagenObtained.getPaciente().getEdad());
+        }
+    
 
     @Test
     @DisplayName("DELETE /imagen/{id} - Eliminar una imagen correctamente")
