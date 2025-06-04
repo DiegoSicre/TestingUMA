@@ -1,20 +1,20 @@
 ----------------------------------------------------------------
-Sat May 11 12:07:48 CEST 2024:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.16.1.1 - (1901046): instance a816c00e-018f-671f-7f2a-00000b2d2788 
-on database directory /Users/guzman/workspace/@TEACHING/TecAppWeb/curso 2023_24/PRIMER PARCIAL/ESQUELETO/PrimerParcialTurno2/bd with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@251a69d7 
-Loaded from file:/Users/guzman/.m2/repository/org/apache/derby/derby/10.16.1.1/derby-10.16.1.1.jar
-java.vendor=Amazon.com Inc.
-java.runtime.version=17.0.6+10-LTS
-user.dir=/Users/guzman/workspace/@TEACHING/TecAppWeb/curso 2023_24/PRIMER PARCIAL/ESQUELETO/PrimerParcialTurno2
-os.name=Mac OS X
-os.arch=x86_64
-os.version=14.2.1
+Wed Jun 04 20:21:14 CEST 2025:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.16.1.1 - (1901046): instance a816c00e-0197-3c2d-082b-000003589b38 
+on database directory C:\Users\diego\OneDrive\Documents\GitHub\TestingUMA\ProyectoMant\bd with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@76ed5528 
+Loaded from file:/C:/Users/diego/.m2/repository/org/apache/derby/derby/10.16.1.1/derby-10.16.1.1.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.1+12-LTS-29
+user.dir=C:\Users\diego\OneDrive\Documents\GitHub\TestingUMA\ProyectoMant
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
 derby.system.home=null
 Database Class Loader started - derby.database.classpath=''
 ----------------------------------------------------------------
-Sat May 11 12:08:00 CEST 2024:
-Shutting down instance a816c00e-018f-671f-7f2a-00000b2d2788 on database directory /Users/guzman/workspace/@TEACHING/TecAppWeb/curso 2023_24/PRIMER PARCIAL/ESQUELETO/PrimerParcialTurno2/bd with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@251a69d7 
-Sat May 11 12:08:00 CEST 2024 Thread[Thread-18,5,main] Cleanup action starting
+Wed Jun 04 20:21:54 CEST 2025:
+Shutting down instance a816c00e-0197-3c2d-082b-000003589b38 on database directory C:\Users\diego\OneDrive\Documents\GitHub\TestingUMA\ProyectoMant\bd with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@76ed5528 
+Wed Jun 04 20:21:55 CEST 2025 Thread[#101,Thread-18,5,main] Cleanup action starting
 ERROR XBM0I: Directory bd cannot be removed.
 	at org.apache.derby.shared.common.error.StandardException.newException(StandardException.java:299)
 	at org.apache.derby.shared.common.error.StandardException.newException(StandardException.java:294)
@@ -24,12 +24,12 @@ ERROR XBM0I: Directory bd cannot be removed.
 	at org.apache.derby.iapi.jdbc.InternalDriver.getNewEmbedConnection(InternalDriver.java:630)
 	at org.apache.derby.iapi.jdbc.InternalDriver$LoginCallable.call(InternalDriver.java:400)
 	at org.apache.derby.iapi.jdbc.InternalDriver$LoginCallable.call(InternalDriver.java:376)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
-	at java.base/java.lang.Thread.run(Thread.java:833)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
 Cleanup action completed
-Sat May 11 12:08:00 CEST 2024 Thread[Thread-18,5,main] Cleanup action starting
+Wed Jun 04 20:21:55 CEST 2025 Thread[#101,Thread-18,5,main] Cleanup action starting
 ERROR XBM0I: Directory bd cannot be removed.
 	at org.apache.derby.shared.common.error.StandardException.newException(StandardException.java:299)
 	at org.apache.derby.shared.common.error.StandardException.newException(StandardException.java:294)
@@ -39,8 +39,8 @@ ERROR XBM0I: Directory bd cannot be removed.
 	at org.apache.derby.iapi.jdbc.InternalDriver.getNewEmbedConnection(InternalDriver.java:630)
 	at org.apache.derby.iapi.jdbc.InternalDriver$LoginCallable.call(InternalDriver.java:400)
 	at org.apache.derby.iapi.jdbc.InternalDriver$LoginCallable.call(InternalDriver.java:376)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
-	at java.base/java.lang.Thread.run(Thread.java:833)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
 Cleanup action completed
