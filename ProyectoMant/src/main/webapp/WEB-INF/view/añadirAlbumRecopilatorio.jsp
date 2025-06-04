@@ -53,7 +53,7 @@
         <form:input path="fechaInicio"></form:input>
         <form:label path="fechaFin">Fecha Fin:</form:label>
         <form:input path="fechaFin"></form:input>
-        <form:button>Filtrar</form:button>
+        <form:button name="filtrar">Filtrar</form:button>
     </div>
 </form:form>
 

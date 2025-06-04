@@ -75,16 +75,11 @@ public class mainController {
             //Caso base, en el que se carga por primera vez
             filtro = new FiltroGeneroDTO();
             canciones = cancionRepository.findAll();
-        }else if(filtro.getFechaInicio() == null || filtro.getFechaFin() == null) {
+        }else if(filtro.getFechaInicio() == null || filtro.getFechaFin() == null || filtro.getFechaInicio() == "" || filtro.getFechaFin() == "") {
             canciones = cancionRepository.filtrarPorGenero(filtro.getIdGenero());
         }else{
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy", Locale.ENGLISH);
-            LocalDate date = LocalDate.parse(filtro.getFechaInicio(), formatter);
-            Date fechaInicio = Date.valueOf(date);
-            date = LocalDate.parse(filtro.getFechaFin(), formatter);
-            Date fechaFin = Date.valueOf(date);
-            canciones = cancionRepository.filtrarPorGeneroYFechas(filtro.getIdGenero(), fechaInicio, fechaFin);
 
+            canciones = cancionRepository.filtrarPorGenero(filtro.getIdGenero());
         }
         //Recopilatorio DTO se vuelve a hacer, pero entiendo que filtro también, que tiene que volver a ser pasado vacío siempre
         //FiltroGeneroDTO filtroVirgen = new FiltroGeneroDTO();
